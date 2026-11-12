@@ -32,7 +32,7 @@ npm run dev
 En otra terminal, desde la raíz del proyecto, inicia la ventana de escritorio:
 
 ```powershell
-.\plantilla-env\Scripts\activate
+.\gestor-archivos-env\Scripts\activate
 python init.py
 ```
 

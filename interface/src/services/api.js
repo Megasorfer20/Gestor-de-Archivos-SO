@@ -26,6 +26,10 @@ export async function listarDirectorio(ruta = '') {
   return (await invocar('listar_directorio', ruta)).data
 }
 
+export async function listarCarpetas() {
+  return (await invocar('listar_carpetas')).data
+}
+
 export async function crearDirectorio(directorio, nombre) {
   return (await invocar('crear_directorio', directorio, nombre)).data
 }

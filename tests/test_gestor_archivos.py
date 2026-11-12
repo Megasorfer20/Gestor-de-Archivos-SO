@@ -54,6 +54,7 @@ class GestorArchivosTests(unittest.TestCase):
 
     def test_renombra_y_copia_sin_reemplazar_destinos(self):
         self.gestor.crear_archivo_texto("", "original.txt")
+        self.gestor.crear_directorio("", "test")
         self.gestor.guardar_archivo("original.txt", "contenido")
         self.assertEqual(
             self.gestor.renombrar_archivo("original.txt", "renombrado.txt")["path"],
@@ -67,6 +68,22 @@ class GestorArchivosTests(unittest.TestCase):
         with self.assertRaisesRegex(ErrorGestorArchivos, "Ya existe"):
             self.gestor.renombrar_archivo("renombrado.txt", "copia.txt")
         self.assertTrue((self.raiz / "renombrado.txt").exists())
+        self.assertEqual(
+            self.gestor.copiar_archivo("renombrado.txt", "test/copia.txt")["path"],
+            "test/copia.txt",
+        )
+        self.assertEqual(self.gestor.leer_archivo("test/copia.txt")["content"], "contenido")
+
+    def test_renombrar_conserva_extension_y_rechaza_cambiarla(self):
+        archivo = self.raiz / "script.py"
+        archivo.write_text("print('hola')", encoding="utf-8")
+
+        self.assertEqual(
+            self.gestor.renombrar_archivo("script.py", "programa")["path"],
+            "programa.py",
+        )
+        with self.assertRaisesRegex(ErrorGestorArchivos, "No cambies la extensión"):
+            self.gestor.renombrar_archivo("programa.py", "programa.js")
 
     def test_elimina_solo_con_confirmacion_explicita(self):
         self.gestor.crear_archivo_texto("", "borrar.txt")
@@ -89,6 +106,11 @@ class GestorArchivosTests(unittest.TestCase):
         informacion = self.gestor.obtener_informacion("nota.txt")
         self.assertEqual(informacion["name"], "nota.txt")
         self.assertEqual(informacion["size"], 0)
+        self.gestor.crear_directorio("A carpeta", "interna")
+        self.assertEqual(
+            [folder["path"] for folder in self.gestor.listar_carpetas()],
+            ["", "A carpeta", "A carpeta/interna"],
+        )
 
     def test_rechaza_rutas_inexistentes_y_no_txt_para_editor(self):
         with self.assertRaisesRegex(ErrorGestorArchivos, "no existe"):

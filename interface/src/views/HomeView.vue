@@ -164,6 +164,16 @@
         <h2 :id="`${dialog.kind}-title`">{{ dialog.title }}</h2>
         <p v-if="dialog.description" class="modal-description">{{ dialog.description }}</p>
         <form @submit.prevent="submitDialog">
+          <label v-if="dialog.kind === 'copy'" for="copy-folder">Carpeta destino</label>
+          <select
+            v-if="dialog.kind === 'copy'"
+            id="copy-folder"
+            v-model="dialog.folder"
+          >
+            <option v-for="folder in dialog.folders" :key="folder.path" :value="folder.path">
+              {{ folder.name }}
+            </option>
+          </select>
           <label :for="`${dialog.kind}-input`">{{ dialog.label }}</label>
           <p v-if="errorMessage" class="dialog-error" role="alert">{{ errorMessage }}</p>
           <textarea
@@ -174,15 +184,17 @@
             autofocus
             required
           ></textarea>
-          <input
-            v-else
-            :id="`${dialog.kind}-input`"
-            v-model="dialog.value"
-            type="text"
-            autocomplete="off"
-            autofocus
-            required
-          >
+          <div v-else class="filename-field">
+            <input
+              :id="`${dialog.kind}-input`"
+              v-model="dialog.value"
+              type="text"
+              autocomplete="off"
+              autofocus
+              required
+            >
+            <span v-if="dialog.extension" class="fixed-extension">{{ dialog.extension }}</span>
+          </div>
           <div class="modal-actions">
             <button type="button" @click="closeDialog">Cancelar</button>
             <button type="submit" class="primary-button" :disabled="busy">
@@ -209,6 +221,7 @@
           class="editor-content"
           aria-label="Contenido del archivo de texto"
           spellcheck="false"
+          @keydown.tab.prevent="insertTab"
         ></textarea>
         <p v-if="errorMessage" class="dialog-error editor-error" role="alert">
           {{ errorMessage }}
@@ -233,7 +246,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import {
   agregarInformacion,
   copiarArchivo,
@@ -242,6 +255,7 @@ import {
   eliminarArchivo,
   guardarArchivo,
   leerArchivo,
+  listarCarpetas,
   listarDirectorio,
   obtenerEstadoBackend,
   obtenerInformacion,
@@ -280,6 +294,10 @@ function showSuccess(message) {
   successTimer = window.setTimeout(() => {
     successMessage.value = ''
   }, 3500)
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 async function perform(operation) {
@@ -380,31 +398,38 @@ function openCreateDialog(kind) {
 function openRenameDialog() {
   if (!isSelectedFile.value) return
   errorMessage.value = ''
+  const { name, extension } = splitExtension(selectedItem.value.name)
   dialog.value = {
     kind: 'rename',
     title: 'Renombrar archivo',
-    label: 'Nuevo nombre',
-    value: selectedItem.value.name,
+    label: 'Nuevo nombre (sin extensión)',
+    value: name,
+    extension,
     submitLabel: 'Renombrar',
   }
 }
 
-function openCopyDialog() {
+function splitExtension(name) {
+  const lastDot = name.lastIndexOf('.')
+  if (lastDot <= 0) return { name, extension: '' }
+  return { name: name.slice(0, lastDot), extension: name.slice(lastDot) }
+}
+
+async function openCopyDialog() {
   if (!isSelectedFile.value) return
   errorMessage.value = ''
-  const parent = selectedItem.value.path.includes('/')
-    ? `${selectedItem.value.path.slice(0, selectedItem.value.path.lastIndexOf('/') + 1)}`
-    : ''
-  const extension = selectedItem.value.name.includes('.')
-    ? `.${selectedItem.value.name.split('.').pop()}`
-    : ''
-  const stem = extension ? selectedItem.value.name.slice(0, -extension.length) : selectedItem.value.name
+  const result = await perform(() => listarCarpetas())
+  if (!result) return
+  const { name, extension } = splitExtension(selectedItem.value.name)
   dialog.value = {
     kind: 'copy',
     title: 'Copiar archivo',
-    description: 'Escribe la ruta de destino dentro de directory.',
-    label: 'Ruta nueva (relativa a directory)',
-    value: `${parent}${stem} - copia${extension}`,
+    description: 'Elige una carpeta del espacio de trabajo y asigna un nombre a la copia.',
+    label: 'Nombre de la copia',
+    value: `${name} - copia`,
+    extension,
+    folder: currentPath.value,
+    folders: result,
     submitLabel: 'Copiar',
   }
 }
@@ -439,6 +464,7 @@ async function submitDialog() {
     return
   }
   let result
+  let refreshPath = currentPath.value
 
   if (currentDialog.kind === 'folder') {
     result = await perform(() => crearDirectorio(currentPath.value, value))
@@ -448,10 +474,13 @@ async function submitDialog() {
     result = await perform(() => crearArchivoTexto(currentPath.value, fileName))
     if (result) showSuccess('Archivo de texto creado.')
   } else if (currentDialog.kind === 'rename') {
-    result = await perform(() => renombrarArchivo(selectedPath.value, value))
+    const newName = `${value.replace(new RegExp(`${escapeRegExp(currentDialog.extension)}$`, 'i'), '')}${currentDialog.extension}`
+    result = await perform(() => renombrarArchivo(selectedPath.value, newName))
     if (result) showSuccess('Archivo renombrado.')
   } else if (currentDialog.kind === 'copy') {
-    result = await perform(() => copiarArchivo(selectedPath.value, value))
+    const destination = `${currentDialog.folder ? `${currentDialog.folder}/` : ''}${value}${currentDialog.extension}`
+    result = await perform(() => copiarArchivo(selectedPath.value, destination))
+    refreshPath = currentDialog.folder
     if (result) showSuccess('Archivo copiado.')
   } else if (currentDialog.kind === 'append') {
     result = await perform(() => agregarInformacion(selectedPath.value, currentDialog.value))
@@ -460,7 +489,7 @@ async function submitDialog() {
 
   if (result) {
     dialog.value = null
-    await loadDirectory()
+    await loadDirectory(refreshPath)
   }
 }
 
@@ -494,6 +523,16 @@ async function saveEditor() {
     showSuccess('Cambios guardados.')
     await loadDirectory()
   }
+}
+
+async function insertTab(event) {
+  const editor = event.currentTarget
+  const start = editor.selectionStart
+  const end = editor.selectionEnd
+  editorContent.value =
+    editorContent.value.slice(0, start) + '\t' + editorContent.value.slice(end)
+  await nextTick()
+  editor.setSelectionRange(start + 1, start + 1)
 }
 
 function closeEditor() {

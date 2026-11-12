@@ -10,8 +10,10 @@ implementado en Python (`clases/`) y se comunica con la interfaz Vue mediante
 - Crear carpetas y archivos `.txt` vacíos.
 - Navegar entre carpetas y listar sus archivos.
 - Abrir, leer y editar `.txt` en un editor integrado.
+- Insertar tabulaciones con la tecla Tab al editar texto.
 - Agregar información al final de un `.txt`.
-- Renombrar, copiar y eliminar archivos (la eliminación pide confirmación).
+- Renombrar archivos sin perder su extensión y copiar a cualquier carpeta
+  existente dentro de `directory/` (la eliminación pide confirmación).
 - Consultar nombre, tamaño y fecha de modificación.
 - Evitar rutas fuera de `directory/`, enlaces simbólicos o duros hacia archivos
   externos y sobrescrituras accidentales por nombres duplicados.

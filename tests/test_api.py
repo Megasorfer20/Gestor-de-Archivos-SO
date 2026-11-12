@@ -18,6 +18,10 @@ class APITests(unittest.TestCase):
     def test_api_expone_operaciones_y_delega_en_servicio(self):
         self.assertEqual(self.api.obtener_estado()["data"]["root"], "directory")
         self.assertTrue(self.api.crear_directorio("", "Documentos")["success"])
+        self.assertEqual(
+            [folder["path"] for folder in self.api.listar_carpetas()["data"]],
+            ["", "Documentos"],
+        )
         self.assertTrue(
             self.api.crear_archivo_texto("Documentos", "nota.txt")["success"]
         )

@@ -35,6 +35,9 @@ class API:
     def listar_directorio(self, ruta: str = "") -> Dict[str, Any]:
         return self._ejecutar(lambda: self._gestor.listar_directorio(ruta))
 
+    def listar_carpetas(self) -> Dict[str, Any]:
+        return self._ejecutar(self._gestor.listar_carpetas)
+
     def crear_directorio(self, directorio: str, nombre: str) -> Dict[str, Any]:
         return self._ejecutar(
             lambda: self._gestor.crear_directorio(directorio, nombre)

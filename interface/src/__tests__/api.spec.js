@@ -7,6 +7,7 @@ import {
   eliminarArchivo,
   guardarArchivo,
   leerArchivo,
+  listarCarpetas,
   listarDirectorio,
   obtenerEstadoBackend,
   obtenerInformacion,
@@ -28,6 +29,7 @@ describe('servicio de API de escritorio', () => {
       [
         'obtener_estado',
         'listar_directorio',
+        'listar_carpetas',
         'crear_directorio',
         'crear_archivo_texto',
         'leer_archivo',
@@ -48,6 +50,7 @@ describe('servicio de API de escritorio', () => {
 
     await expect(obtenerEstadoBackend()).resolves.toMatchObject({ message: 'Conectado.' })
     await expect(listarDirectorio('Documentos')).resolves.toEqual(data)
+    await expect(listarCarpetas()).resolves.toEqual(data)
     await crearDirectorio('', 'Documentos')
     await crearArchivoTexto('Documentos', 'nota.txt')
     await leerArchivo('Documentos/nota.txt')
@@ -59,6 +62,7 @@ describe('servicio de API de escritorio', () => {
     await obtenerInformacion('Documentos/nota.txt')
 
     expect(api.listar_directorio).toHaveBeenCalledWith('Documentos')
+    expect(api.listar_carpetas).toHaveBeenCalledOnce()
     expect(api.crear_directorio).toHaveBeenCalledWith('', 'Documentos')
     expect(api.crear_archivo_texto).toHaveBeenCalledWith('Documentos', 'nota.txt')
     expect(api.leer_archivo).toHaveBeenCalledWith('Documentos/nota.txt')

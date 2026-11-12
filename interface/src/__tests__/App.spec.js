@@ -4,10 +4,13 @@ import HomeView from '../views/HomeView.vue'
 import {
   crearArchivoTexto,
   crearDirectorio,
+  copiarArchivo,
   guardarArchivo,
   leerArchivo,
+  listarCarpetas,
   listarDirectorio,
   obtenerEstadoBackend,
+  renombrarArchivo,
 } from '../services/api'
 
 vi.mock('../services/api', () => ({
@@ -18,6 +21,7 @@ vi.mock('../services/api', () => ({
   eliminarArchivo: vi.fn(),
   guardarArchivo: vi.fn(),
   leerArchivo: vi.fn(),
+  listarCarpetas: vi.fn(),
   listarDirectorio: vi.fn(),
   obtenerEstadoBackend: vi.fn(),
   obtenerInformacion: vi.fn(),
@@ -129,6 +133,101 @@ describe('explorador de archivos', () => {
 
     expect(guardarArchivo).toHaveBeenCalledWith('notas.txt', 'Hola mundo')
     expect(wrapper.text()).toContain('Cambios guardados.')
+    wrapper.unmount()
+  })
+
+  it('copia archivos a una carpeta distinta dentro de directory', async () => {
+    window.pywebview = { api: {} }
+    vi.mocked(listarDirectorio).mockResolvedValue([
+      {
+        name: 'notas.txt',
+        path: 'notas.txt',
+        type: 'file',
+        size: 4,
+        modified: '2026-01-01T10:00:00',
+      },
+    ])
+    vi.mocked(listarCarpetas).mockResolvedValue([
+      { path: '', name: 'directory (raíz)' },
+      { path: 'test', name: 'test' },
+    ])
+    vi.mocked(copiarArchivo).mockResolvedValue({ path: 'test/notas - copia.txt' })
+
+    const wrapper = mount(HomeView)
+    await flushPromises()
+    await wrapper.get('.file-entry').trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().trim() === 'Copiar')
+      .trigger('click')
+    await flushPromises()
+    await wrapper.get('#copy-folder').setValue('test')
+    await wrapper.get('#copy-input').setValue('notas - copia')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+
+    expect(copiarArchivo).toHaveBeenCalledWith(
+      'notas.txt',
+      'test/notas - copia.txt',
+    )
+    expect(listarDirectorio).toHaveBeenLastCalledWith('test')
+    wrapper.unmount()
+  })
+
+  it('renombra un archivo conservando su extensión fija', async () => {
+    window.pywebview = { api: {} }
+    vi.mocked(listarDirectorio).mockResolvedValue([
+      {
+        name: 'notas.txt',
+        path: 'notas.txt',
+        type: 'file',
+        size: 4,
+        modified: '2026-01-01T10:00:00',
+      },
+    ])
+    vi.mocked(renombrarArchivo).mockResolvedValue({ path: 'diario.txt' })
+
+    const wrapper = mount(HomeView)
+    await flushPromises()
+    await wrapper.get('.file-entry').trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().trim() === 'Renombrar')
+      .trigger('click')
+    await wrapper.get('#rename-input').setValue('diario')
+    expect(wrapper.get('.fixed-extension').text()).toBe('.txt')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+
+    expect(renombrarArchivo).toHaveBeenCalledWith('notas.txt', 'diario.txt')
+    wrapper.unmount()
+  })
+
+  it('inserta tabulación en la posición del cursor del editor', async () => {
+    window.pywebview = { api: {} }
+    vi.mocked(listarDirectorio).mockResolvedValue([
+      {
+        name: 'notas.txt',
+        path: 'notas.txt',
+        type: 'file',
+        size: 4,
+        modified: '2026-01-01T10:00:00',
+      },
+    ])
+    vi.mocked(leerArchivo).mockResolvedValue({ path: 'notas.txt', content: 'Hola' })
+
+    const wrapper = mount(HomeView)
+    await flushPromises()
+    await wrapper.get('.file-entry').trigger('dblclick')
+    await flushPromises()
+    const editor = wrapper.get('.editor-content')
+    await editor.setValue('ab')
+    editor.element.setSelectionRange(1, 1)
+    await editor.trigger('keydown', { key: 'Tab' })
+
+    expect(editor.element.value).toBe('a\tb')
+    expect(editor.element.selectionStart).toBe(2)
+    expect(editor.element.selectionEnd).toBe(2)
     wrapper.unmount()
   })
 

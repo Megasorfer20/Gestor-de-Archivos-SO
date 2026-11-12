@@ -200,6 +200,21 @@ class GestorArchivos:
         except OSError as error:
             raise ErrorGestorArchivos(f"No se pudo listar la carpeta: {error}") from error
 
+    def listar_carpetas(self) -> List[Dict[str, str]]:
+        carpetas = [{"path": "", "name": "directory (raíz)"}]
+        pendientes = [""]
+        while pendientes:
+            ruta_padre = pendientes.pop()
+            for entrada in self.listar_directorio(ruta_padre):
+                if entrada["type"] == "directory":
+                    carpeta = {"path": entrada["path"], "name": entrada["path"]}
+                    carpetas.append(carpeta)
+                    pendientes.append(entrada["path"])
+        return [carpetas[0]] + sorted(
+            carpetas[1:],
+            key=lambda carpeta: (carpeta["name"].casefold(), carpeta["path"]),
+        )
+
     def crear_directorio(self, directorio: str, nombre: str) -> Dict[str, str]:
         padre = self._resolver_directorio(directorio, permitir_raiz=True)
         nombre = self._validar_nombre(nombre)
@@ -284,6 +299,15 @@ class GestorArchivos:
     def renombrar_archivo(self, ruta: str, nuevo_nombre: str) -> Dict[str, str]:
         origen = self._resolver_archivo(ruta)
         nuevo_nombre = self._validar_nombre(nuevo_nombre)
+        extension = origen.suffix
+        if extension:
+            if nuevo_nombre.casefold().endswith(extension.casefold()):
+                nuevo_nombre = nuevo_nombre[: -len(extension)]
+            elif Path(nuevo_nombre).suffix:
+                raise ErrorGestorArchivos(
+                    "No cambies la extensión del archivo; modifica solo el nombre."
+                )
+            nuevo_nombre = self._validar_nombre(nuevo_nombre) + extension
         destino = origen.with_name(nuevo_nombre)
         if nuevo_nombre == origen.name:
             raise ErrorGestorArchivos("El archivo ya tiene ese nombre.")

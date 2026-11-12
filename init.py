@@ -1,15 +1,26 @@
+import logging
+
 import webview
-import os
+
 from API import API
 
 
 def main() -> None:
-    if not os.path.dirname("directory"):
-        os.mkdir("directory")
-    api = API()
+    try:
+        api = API()
 
-    webview.create_window("Plantilla de proyecto", "http://localhost:5173", js_api=api)
-    webview.start(debug=True, http_server=True)
+        webview.create_window(
+            "Gestor de archivos",
+            "http://localhost:5173",
+            js_api=api,
+            min_size=(900, 600),
+        )
+        webview.start(debug=True, http_server=True)
+    except Exception as error:
+        logging.exception("No se pudo iniciar el gestor de archivos.")
+        raise SystemExit(
+            "No se pudo iniciar el gestor. Verifica pywebview y que Vite esté activo."
+        ) from error
 
 
 if __name__ == "__main__":

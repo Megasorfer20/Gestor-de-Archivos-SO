@@ -67,18 +67,9 @@ describe('servicio de API de escritorio', () => {
     expect(api.crear_archivo_texto).toHaveBeenCalledWith('Documentos', 'nota.txt')
     expect(api.leer_archivo).toHaveBeenCalledWith('Documentos/nota.txt')
     expect(api.guardar_archivo).toHaveBeenCalledWith('Documentos/nota.txt', 'texto')
-    expect(api.agregar_informacion).toHaveBeenCalledWith(
-      'Documentos/nota.txt',
-      'más texto',
-    )
-    expect(api.renombrar_archivo).toHaveBeenCalledWith(
-      'Documentos/nota.txt',
-      'renombrada.txt',
-    )
-    expect(api.copiar_archivo).toHaveBeenCalledWith(
-      'Documentos/nota.txt',
-      'Documentos/copia.txt',
-    )
+    expect(api.agregar_informacion).toHaveBeenCalledWith('Documentos/nota.txt', 'más texto')
+    expect(api.renombrar_archivo).toHaveBeenCalledWith('Documentos/nota.txt', 'renombrada.txt')
+    expect(api.copiar_archivo).toHaveBeenCalledWith('Documentos/nota.txt', 'Documentos/copia.txt')
     expect(api.eliminar_archivo).toHaveBeenCalledWith('Documentos/nota.txt', true)
     expect(api.obtener_informacion).toHaveBeenCalledWith('Documentos/nota.txt')
   })

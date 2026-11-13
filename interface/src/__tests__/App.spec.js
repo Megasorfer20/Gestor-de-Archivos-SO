@@ -166,10 +166,7 @@ describe('explorador de archivos', () => {
     await wrapper.get('form').trigger('submit')
     await flushPromises()
 
-    expect(copiarArchivo).toHaveBeenCalledWith(
-      'notas.txt',
-      'test/notas - copia.txt',
-    )
+    expect(copiarArchivo).toHaveBeenCalledWith('notas.txt', 'test/notas - copia.txt')
     expect(listarDirectorio).toHaveBeenLastCalledWith('test')
     wrapper.unmount()
   })

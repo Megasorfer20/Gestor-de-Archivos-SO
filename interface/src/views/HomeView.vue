@@ -20,18 +20,10 @@
           Nuevo archivo .txt
         </button>
         <span class="toolbar-divider" aria-hidden="true"></span>
-        <button
-          type="button"
-          :disabled="!connected || !canEdit || busy"
-          @click="openEditor"
-        >
+        <button type="button" :disabled="!connected || !canEdit || busy" @click="openEditor">
           Abrir / editar
         </button>
-        <button
-          type="button"
-          :disabled="!connected || !canEdit || busy"
-          @click="openAppendDialog"
-        >
+        <button type="button" :disabled="!connected || !canEdit || busy" @click="openAppendDialog">
           Agregar información
         </button>
         <span class="toolbar-spacer"></span>
@@ -56,9 +48,7 @@
       </div>
 
       <nav class="breadcrumbs" aria-label="Ruta actual">
-        <button type="button" :disabled="!connected" @click="navigateTo('')">
-          directory
-        </button>
+        <button type="button" :disabled="!connected" @click="navigateTo('')">directory</button>
         <template v-for="(segment, index) in pathSegments" :key="index">
           <span aria-hidden="true">›</span>
           <button
@@ -122,9 +112,7 @@
         <span v-if="selectedItem">
           Seleccionado: <strong>{{ selectedItem.name }}</strong>
         </span>
-        <span v-else>
-          Doble clic para abrir · {{ entries.length }} elemento(s)
-        </span>
+        <span v-else> Doble clic para abrir · {{ entries.length }} elemento(s) </span>
         <div class="selection-actions">
           <button
             type="button"
@@ -160,16 +148,17 @@
     </section>
 
     <div v-if="dialog" class="modal-backdrop" @click.self="closeDialog">
-      <section class="modal" role="dialog" aria-modal="true" :aria-labelledby="`${dialog.kind}-title`">
+      <section
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="`${dialog.kind}-title`"
+      >
         <h2 :id="`${dialog.kind}-title`">{{ dialog.title }}</h2>
         <p v-if="dialog.description" class="modal-description">{{ dialog.description }}</p>
         <form @submit.prevent="submitDialog">
           <label v-if="dialog.kind === 'copy'" for="copy-folder">Carpeta destino</label>
-          <select
-            v-if="dialog.kind === 'copy'"
-            id="copy-folder"
-            v-model="dialog.folder"
-          >
+          <select v-if="dialog.kind === 'copy'" id="copy-folder" v-model="dialog.folder">
             <option v-for="folder in dialog.folders" :key="folder.path" :value="folder.path">
               {{ folder.name }}
             </option>
@@ -192,7 +181,7 @@
               autocomplete="off"
               autofocus
               required
-            >
+            />
             <span v-if="dialog.extension" class="fixed-extension">{{ dialog.extension }}</span>
           </div>
           <div class="modal-actions">
@@ -307,8 +296,7 @@ async function perform(operation) {
   try {
     return await operation()
   } catch (error) {
-    errorMessage.value =
-      error instanceof Error ? error.message : 'Ocurrió un error inesperado.'
+    errorMessage.value = error instanceof Error ? error.message : 'Ocurrió un error inesperado.'
     return null
   } finally {
     busy.value = false
@@ -495,7 +483,9 @@ async function submitDialog() {
 
 async function deleteSelected() {
   if (!isSelectedFile.value || busy.value) return
-  const confirmed = window.confirm(`¿Eliminar "${selectedItem.value.name}"? Esta acción no se puede deshacer.`)
+  const confirmed = window.confirm(
+    `¿Eliminar "${selectedItem.value.name}"? Esta acción no se puede deshacer.`,
+  )
   if (!confirmed) return
   const result = await perform(() => eliminarArchivo(selectedPath.value))
   if (result) {
@@ -529,8 +519,7 @@ async function insertTab(event) {
   const editor = event.currentTarget
   const start = editor.selectionStart
   const end = editor.selectionEnd
-  editorContent.value =
-    editorContent.value.slice(0, start) + '\t' + editorContent.value.slice(end)
+  editorContent.value = editorContent.value.slice(0, start) + '\t' + editorContent.value.slice(end)
   await nextTick()
   editor.setSelectionRange(start + 1, start + 1)
 }

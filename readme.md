@@ -42,15 +42,16 @@ cd interface
 npm install
 ```
 
-## Ejecutar
+## Ejecutar en producción
 
-Abre dos terminales. En la primera, desde `interface/`:
+Genera el frontend desde `interface/`:
 
 ```sh
-npm run dev
+npm run build
 ```
 
-En la segunda, desde la raíz del proyecto:
+Después, desde la raíz, inicia la aplicación; por defecto carga los archivos
+locales de `interface/dist/` y no requiere que Vite siga ejecutándose:
 
 ```powershell
 # Windows
@@ -62,9 +63,23 @@ En la segunda, desde la raíz del proyecto:
 ./gestor-archivos-env/bin/python init.py
 ```
 
-La ventana de pywebview permite usar el gestor. Si Vite no está iniciado, la
-ventana no podrá cargar la interfaz; inicia primero `npm run dev`. La carpeta
-administrada se crea automáticamente en `directory/`.
+## Ejecutar en desarrollo
+
+Terminal 1, desde `interface/`:
+
+```sh
+npm run dev
+```
+
+Terminal 2, desde la raíz:
+
+```sh
+python init.py --dev
+```
+
+El modo de desarrollo se conecta a Vite en `http://localhost:5173`. La ventana
+de pywebview siempre recibe la API Python para las operaciones del gestor. La
+carpeta administrada se crea automáticamente en `directory/`.
 
 ## Pruebas
 

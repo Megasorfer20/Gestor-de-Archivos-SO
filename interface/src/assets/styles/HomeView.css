@@ -465,7 +465,7 @@ button:disabled {
   outline: 0;
   resize: none;
   color: #1e293b;
-  font-family: Consolas, "Courier New", monospace;
+  font-family: Consolas, 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.6;
   tab-size: 4;

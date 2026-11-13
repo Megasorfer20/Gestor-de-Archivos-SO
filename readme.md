@@ -1,18 +1,31 @@
-# Plantilla de proyecto
+# Gestor de archivos
 
-Esqueleto vacío para iniciar un proyecto de escritorio con una interfaz Vue y
-un backend Python conectado mediante pywebview. Solo incluye una comprobación
-mínima de conexión; no contiene funcionalidades de negocio ni una interfaz
-previa.
+Aplicación de escritorio para administrar carpetas y archivos dentro de
+`directory/`, sin acceder a rutas personales o del sistema. El backend está
+implementado en Python (`clases/`) y se comunica con la interfaz Vue mediante
+`API.py` y pywebview.
+
+## Funcionalidades
+
+- Crear carpetas y archivos `.txt` vacíos.
+- Navegar entre carpetas y listar sus archivos.
+- Abrir, leer y editar `.txt` en un editor integrado.
+- Insertar tabulaciones con la tecla Tab al editar texto.
+- Agregar información al final de un `.txt`.
+- Renombrar archivos sin perder su extensión y copiar a cualquier carpeta
+  existente dentro de `directory/` (la eliminación pide confirmación).
+- Consultar nombre, tamaño y fecha de modificación.
+- Evitar rutas fuera de `directory/`, enlaces simbólicos o duros hacia archivos
+  externos y sobrescrituras accidentales por nombres duplicados.
 
 ## Requisitos
 
-- Python 3
-- Node.js y npm
+- Python 3.9 o posterior.
+- Node.js `^20.19.0` o `>=22.12.0` y npm.
 
-## Preparación
+## Preparar el entorno
 
-En Windows, desde la raíz del proyecto:
+En Windows, desde la raíz:
 
 ```powershell
 .\setup_env_windows.bat
@@ -20,37 +33,65 @@ cd interface
 npm install
 ```
 
-## Ejecución
+En macOS o Linux, desde la raíz:
 
-Inicia el servidor de desarrollo de la interfaz:
+```sh
+python3 -m venv gestor-archivos-env
+./gestor-archivos-env/bin/python -m pip install -r requirements.txt
+cd interface
+npm install
+```
+
+## Ejecutar en producción
+
+Genera el frontend desde `interface/`:
+
+```sh
+npm run build
+```
+
+Después, desde la raíz, inicia la aplicación; por defecto carga los archivos
+locales de `interface/dist/` y no requiere que Vite siga ejecutándose:
 
 ```powershell
-cd interface
+# Windows
+.\gestor-archivos-env\Scripts\python.exe init.py
+```
+
+```sh
+# macOS o Linux
+./gestor-archivos-env/bin/python init.py
+```
+
+## Ejecutar en desarrollo
+
+Terminal 1, desde `interface/`:
+
+```sh
 npm run dev
 ```
 
-En otra terminal, desde la raíz del proyecto, inicia la ventana de escritorio:
+Terminal 2, desde la raíz:
 
-```powershell
-.\gestor-archivos-env\Scripts\activate
-python init.py
+```sh
+python init.py --dev
 ```
 
-La pantalla inicial indica si el backend Python está conectado. La interfaz
-también puede abrirse en un navegador con `npm run dev`, pero la conexión Python
-solo está disponible en la ventana de pywebview.
+El modo de desarrollo se conecta a Vite en `http://localhost:5173`. La ventana
+de pywebview siempre recibe la API Python para las operaciones del gestor. La
+carpeta administrada se crea automáticamente en `directory/`.
 
-## Pruebas y verificaciones
+## Pruebas
 
 Desde la raíz:
 
-```powershell
-py -3 -B -m unittest discover -s tests -v
+```sh
+python -m unittest discover -s tests -v
 ```
 
-Desde `interface`:
+Desde `interface/`:
 
-```powershell
+```sh
 npm run test:unit
 npm run build
 npm run lint
